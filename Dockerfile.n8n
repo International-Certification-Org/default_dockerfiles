@@ -1,0 +1,3 @@
+FROM n8nio/n8n:nightly
+RUN apk --update add whois
+RUN apk --update add curl
