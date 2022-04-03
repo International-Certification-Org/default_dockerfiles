@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: webserver_pandoc_phpapi
+  IMAGE_NAME: international-certification-org/webserver_pandoc_phpapi
   
 jobs:
   set_tag:
