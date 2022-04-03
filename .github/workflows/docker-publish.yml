@@ -65,10 +65,10 @@ jobs:
              type=semver,pattern={{version}},value=${{ needs.set_tag.outputs.new_tag }}
       
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.10.0
         with:
-          context: .
           file: Dockerfile.webserver_7.4.24_apache_pandoc
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      
