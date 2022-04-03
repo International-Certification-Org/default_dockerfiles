@@ -1,0 +1,74 @@
+name: Tag, Build and Publish Docker Image
+on:
+  push:
+    branches:
+      - main
+    paths-ignore: 
+      - ".github/**"
+      - ".docker/**"
+  workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: webserver_pandoc_phpapi
+  
+jobs:
+  set_tag:
+    name: Set Tag
+    runs-on: ubuntu-latest
+    outputs:
+      old_tag: ${{ steps.bump-tag.outputs.tag }}
+      new_tag: ${{ steps.bump-tag.outputs.new_tag }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: "0"
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.36.0
+        id: bump-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: "none"
+          WITH_V: true
+          RELEASE_BRANCHES: main
+      - name: Echo version
+        if: ${{ steps.bump-tag.outputs.tag != steps.bump-tag.outputs.new_tag }}
+        run: echo "Previous version is ${{ steps.bump-tag.outputs.tag }}, new version is ${{ steps.bump-tag.outputs.new_tag }}, part that was bumped is ${{ steps.bump-tag.outputs.part }}"
+  build_and_publish:
+    name: Build and publish
+    needs: [set_tag]
+    if: "contains(github.event.head_commit.message, '#patch') || contains(github.event.head_commit.message, '#minor') || contains(github.event.head_commit.message, '#major')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+             type=semver,pattern={{version}},value=${{ needs.set_tag.outputs.new_tag }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile.webserver_7.4.24_apache_pandoc
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
