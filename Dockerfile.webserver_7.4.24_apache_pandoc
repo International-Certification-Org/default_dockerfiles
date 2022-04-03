@@ -1,3 +1,4 @@
+# for build in local env use the following command
 # docker build -t ico:webserver_pandoc_phpapi - < Dockerfile.ico_webserver_pandoc_phpapi
 # Base image
 FROM php:7.4.24-apache
