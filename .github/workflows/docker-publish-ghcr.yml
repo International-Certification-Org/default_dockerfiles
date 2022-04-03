@@ -17,7 +17,7 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: international-certification-org/default_dockerfiles
+  IMAGE_NAME: international-certification-org/webserver_pandoc_phpapi
 
 
 jobs:
